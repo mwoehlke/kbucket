@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.6)
 project(kbucket)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -12,7 +15,7 @@ include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings)
 
-find_package(Qt5 5.3.0 CONFIG REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt5 5.7.0 CONFIG REQUIRED COMPONENTS Core Gui Widgets)
 find_package(KF5 5.2.0 REQUIRED COMPONENTS
     CoreAddons
     I18n
