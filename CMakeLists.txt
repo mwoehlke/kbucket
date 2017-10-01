@@ -17,6 +17,7 @@ include(KDECompilerSettings)
 
 find_package(Qt5 5.7.0 CONFIG REQUIRED COMPONENTS Core Gui Widgets)
 find_package(KF5 5.2.0 REQUIRED COMPONENTS
+    KIO
     CoreAddons
     I18n
     XmlGui
@@ -30,6 +31,7 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     Qt5::Widgets
+    KF5::KIOCore
     KF5::CoreAddons
     KF5::I18n
     KF5::XmlGui

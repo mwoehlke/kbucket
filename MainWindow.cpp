@@ -1,11 +1,19 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
+#include <KIO/StoredTransferJob>
+
 #include <KActionCollection>
 #include <KConfigGroup>
+#include <KLocalizedString>
+#include <KMessageBox>
 #include <KSharedConfig>
 #include <KStandardAction>
 #include <KTextEdit>
+
+#include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 //-----------------------------------------------------------------------------
 MainWindow::MainWindow(QWidget *parent) :
@@ -69,13 +77,36 @@ bool MainWindow::queryClose()
 //-----------------------------------------------------------------------------
 void MainWindow::open()
 {
-    // TODO
+    auto const& url = QFileDialog::getOpenFileUrl(this, i18n("Open List"), {},
+                                                  i18n("JSON Lists (*.json)"));
+
+    if (!url.isEmpty())
+        open(url);
 }
 
 //-----------------------------------------------------------------------------
 void MainWindow::open(QUrl const& url)
 {
-    // TODO
+    m_job = KIO::storedGet(url);
+
+    connect(m_job, &KIO::Job::result, [this, url](KJob* job){
+        if (job != m_job)
+            return;
+
+        if (job->error())
+        {
+            KMessageBox::error(this, job->errorString());
+            return;
+        }
+
+        auto* const storedJob = qobject_cast<KIO::StoredTransferJob*>(job);
+        setContent(storedJob->data(), url);
+
+        job->deleteLater();
+        m_job = nullptr;
+    });
+
+    m_job->exec();
 }
 
 //-----------------------------------------------------------------------------
@@ -94,4 +125,33 @@ void MainWindow::saveAs()
 void MainWindow::saveAs(QUrl const&)
 {
     // TODO
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::setContent(QByteArray const& data, QUrl const& location)
+{
+    QJsonParseError error;
+    auto const& doc = QJsonDocument::fromJson(data, &error);
+    if (!doc.isObject())
+    {
+        KMessageBox::error(this, error.errorString());
+        return;
+    }
+
+    auto const& list = doc.object();
+    auto const& name = list.value(QStringLiteral("name"));
+    m_listName = (name.isString() ? name.toString() : i18n("(Untitled)"));
+
+    m_location = location;
+    m_modified = false;
+    m_recentFiles->addUrl(location);
+
+    updateTitleBar();
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::updateTitleBar()
+{
+    auto const m = (m_modified ? QStringLiteral(" [*]") : QString{});
+    setCaption(m_listName + m);
 }
